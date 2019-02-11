@@ -16,7 +16,7 @@ const TOKEN_PATH = 'token.json';
 // Load client secrets from a local file.
 let credentials = JSON.parse(fs.readFileSync('credentials.json'));
 
-//authorize(credentials, listFiles);
+authorize(credentials, getUser);
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -69,30 +69,15 @@ function getAccessToken(oAuth2Client, callback) {
 }
 
 /**
- * Lists the names and IDs of up to 10 files.
+ * Prints authorized user's info on the console
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function listFiles(auth) {
+function getUser(auth) {
   const drive = google.drive({ version: 'v3', auth });
 
   drive.about.get({ fields: 'user' }, (err, res) => {
     console.log(res.data);
-  });
-
-  drive.files.list({
-    pageSize: 10,
-    fields: 'nextPageToken, files(id, name)',
-  }, (err, res) => {
-    if (err) return console.log('The API returned an error: ' + err);
-    const files = res.data.files;
-    if (files.length) {
-      console.log('Files:');
-      files.map((file) => {
-        console.log(`${file.name} (${file.id})`);
-      });
-    } else {
-      console.log('No files found.');
-    }
+    console.log('===============')
   });
 }
 
@@ -106,7 +91,7 @@ app.get('/', (req, res) => {
 
 app.post('/submitfile', (req, res) => {
   const form = new formidable.IncomingForm();
-  const gdFolderName = 'gdapitest';
+  const gdFolderName = 'gdapidemo';
 
   form.parse(req, (err, fields, files) => {
     if (err) {
