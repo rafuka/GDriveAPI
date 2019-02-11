@@ -1,0 +1,31 @@
+{
+  "name": "gdriveapi",
+  "version": "1.0.0",
+  "description": "Google Drive Api usage example",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "formidable": "^1.2.1",
+    "googleapis": "^27.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rafuka/GDriveAPI.git"
+  },
+  "keywords": [
+    "google",
+    "drive",
+    "api",
+    "example"
+  ],
+  "author": "Rafael Garcia",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rafuka/GDriveAPI/issues"
+  },
+  "homepage": "https://github.com/rafuka/GDriveAPI#readme"
+}
