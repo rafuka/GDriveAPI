@@ -4,7 +4,7 @@ const express = require('express');
 const formidable = require('formidable');
 
 const readline = require('readline');
-const {google} = require('googleapis');
+const { google } = require('googleapis');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
@@ -12,8 +12,6 @@ const SCOPES = ['https://www.googleapis.com/auth/drive'];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
-
-const MIN_TEXT_LEN = 20; // Minimum length for form's input text (textarea value)
 
 // Load client secrets from a local file.
 let credentials = JSON.parse(fs.readFileSync('credentials.json'));
@@ -27,9 +25,9 @@ let credentials = JSON.parse(fs.readFileSync('credentials.json'));
  * @param {function} callback The callback to call with the authorized client.
  */
 function authorize(credentials, callback) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
+  const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+    client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
@@ -75,10 +73,10 @@ function getAccessToken(oAuth2Client, callback) {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 function listFiles(auth) {
-  const drive = google.drive({version: 'v3', auth});
+  const drive = google.drive({ version: 'v3', auth });
 
-  drive.about.get({fields: 'user'}, (err, res) => {
-      console.log(res.data);
+  drive.about.get({ fields: 'user' }, (err, res) => {
+    console.log(res.data);
   });
 
   drive.files.list({
@@ -103,86 +101,165 @@ const app = express();
 
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname+'/index.html'));
+  res.sendFile(path.join(__dirname + '/index.html'));
 });
 
 app.post('/submitfile', (req, res) => {
-    let form = new formidable.IncomingForm();
+  const form = new formidable.IncomingForm();
+  const gdFolderName = 'gdapitest';
 
-    form.parse(req, (err, fields, files) => {
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      console.error('Error submitting file', err);
+      return res.end('Error submitting file');
+    }
+
+    let userText = fields.text;
+    console.log('Textarea input text:');
+    console.log("\"" + userText + "\"");
+    console.log('Text length: ' + userText.length);
+    console.log(' ====================== ');
+
+    let userFile = files.file;
+    console.log('File input:');
+    console.log('- name: ' + userFile.name);
+    console.log('- size: ' + userFile.size);
+    console.log('- type: ' + userFile.type);
+    console.log(' ====================== ');
+
+    if (userFile.size == 0 && userText.length == 0) {
+      console.log('No input');
+      return res.end('Please provide your resume via file or text input.');
+    }
+
+    authorize(credentials, function (auth) {
+      const drive = google.drive({ version: 'v3', auth });
+      let folderId;
+
+      drive.files.list({
+        q: `name='${gdFolderName}' and mimeType='application/vnd.google-apps.folder'`,
+        fields: 'files(id, name)',
+      }, (err, result) => {
         if (err) {
-            console.error('Error submitting file', err);
-            res.end('Error submitting file');
+          return console.error('The API returned an error: ', err);
         }
 
-        let userText = fields.text;
-        console.log('Textarea input text:');
-        console.log('Text length: ' + userText.length);
-        console.log("\"" + userText + "\"");
-        let userFile = files.file;
-        console.log('File input:');
-        console.log('File size: ' + userFile.size);
-        console.log('File name: ' + userFile.name);
-        console.log('File type: ' + userFile.type);
+        const files = result.data.files;
 
-        if (userFile.size == 0 && userText.length < MIN_TEXT_LEN) {
-          console.log('No input');
-          return res.end('Please provide your resume via file or text input.');
-        }
+        if (files.length) { // Create file into existing folder
+          console.log(`Creating file in folder ${files[0].name}, id: ${files[0].id}`);
           
-        authorize(credentials, function(auth) {
-          const drive = google.drive({version: 'v3', auth});
+          folderId = files[0].id;
 
-          drive.files.list({
-            q: "name='gdapitest' and mimeType='application/vnd.google-apps.folder'",
-            fields: 'files(id, name)',
-          }, (err, res) => {
+          // Create user-uploaded file
+          if (userFile.size > 0) {
+            var fileMetadata = {
+              name: userFile.name,
+              parents: [folderId]
+            };
+            var media = {
+              mimeType: userFile.type,
+              body: fs.createReadStream(userFile.path)
+            };
+          }
+          else {
+            let date = new Date();
+
+            var fileMetadata = {
+              name: 'text-input-' + date.getTime(),
+              parents: [folderId]
+            };
+            var media = {
+              mimeType: 'text/plain',
+              body: userText
+            };
+          }
+          drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id, name'
+          }, (err, file) => {
             if (err) {
-              return console.log('The API returned an error: ' + err);
+              // Handle error
+              console.error('Couldn\'t create google drive file', err);
+              return res.end('Couldn\'t create google drive file');
             }
-            const files = res.data.files;
-            if (files.length) {
-              console.log('File:');
-              console.log(`${files[0].name} (${files[0].id})`);
-              // TODO: upload file into folder with file.id
-            } else {
-              console.log('No files found.');
-              // TODO create folder and upload file into it
+            else {
+              console.log('File Created');
+              console.log('- name: ', file.data.name);
+              console.log('- id: ', file.data.id);
+              return res.end('File sent.')
             }
           });
 
-              let folderId = '1QpBtdRE0Hts5ZN4MLm709qZT42kQ0zjg';
-              var fileMetadata = {
-                  'name': userFile.name,
+          
+        }
+        else { // Create folder and then create files in folder
+          
+          console.log(`Folder ${gdFolderName} not found, the folder will be created.`);
+
+          let fileMetadata = {
+            name: gdFolderName,
+            mimeType: 'application/vnd.google-apps.folder'
+          };
+          drive.files.create({
+            resource: fileMetadata,
+            fields: 'id'
+          }, (err, folder) => {
+            if (err) {
+              console.error(`Couldn\'t create ${gdFolderName} folder.`, err);
+              return res.end('Couldn\'t upload files to google drive.');
+            }
+            else {
+              let folderId = folder.data.id;
+              console.log(`Folder ${gdFolderName} created, creating files...`);
+
+              // Create user-uploaded file
+              if (userFile.size > 0) {
+                var fileMetadata = {
+                  name: userFile.name,
                   parents: [folderId]
-              };
-              var media = {
+                };
+                var media = {
                   mimeType: userFile.type,
                   body: fs.createReadStream(userFile.path)
-              };
+                };
+              }
+              else {
+                let date = new Date();
+                var fileMetadata = {
+                  name: 'text-input' + date.getTime(),
+                  parents: [folderId]
+                };
+                var media = {
+                  mimeType: 'text/plain',
+                  body: userText
+                };
+              }
+
               drive.files.create({
-                  resource: fileMetadata,
-                  media: media,
-                  fields: 'id'
-              }, function (err, file) {
-
-                  if (err) {
-                    // Handle error
-                    console.error(err);
-                    res.end('Couldn\'t create google drive file');
-                  }
-                  else {
-                    console.log('File Created');
-                    console.log(file.data.id);
-                    res.end('File sent.')
-                  }
-              });
+                resource: fileMetadata,
+                media: media,
+                fields: 'id, name'
+              }, (err, file) => {
+                if (err) {
+                  // Handle error
+                  console.error('Couldn\'t create google drive file', err);
+                  return res.end('Couldn\'t create google drive file');
+                }
+                else {
+                  console.log('File Created');
+                  console.log('- name: ', file.data.name);
+                  console.log('- id: ', file.data.id);
+                  return res.end('File sent.');
+                }
+              }); 
+            }
           });
-        
-
-        // response to browser
-        //res.send('file sent')
+        }
+      }); 
     });
+  });
 });
 
 let port = 3030;
