@@ -9,14 +9,6 @@ const ACCESS_TOKEN = process.env.ACCESS_TOKEN || '2jO3qLvMgjMAAAAAAAAJDjG57p6std
 
 let dbx = new Dropbox({ accessToken: ACCESS_TOKEN, fetch: fetch });
 
-// List files in the app folder
-dbx.filesListFolder({
-  path: ''
-}).then(res => {
-  console.log(res.entries);
-}).catch(err => console.error(err));
-
-
 const app = express();
 
 app.get('/', (req, res) => {
@@ -34,18 +26,18 @@ app.post('/submitfile', (req, res) => {
     }
 
     let userText = fields.text;
-    console.log('Textarea input text:');
+   /* console.log('Textarea input text:');
     console.log("\"" + userText + "\"");
     console.log('Text length: ' + userText.length);
-    console.log(' ====================== ');
+    console.log(' ====================== '); */
 
     let userFile = files.file;
-    console.log('File input:');
+   /* console.log('File input:');
     console.log(userFile);
     console.log('- name: ' + userFile.name);
     console.log('- size: ' + userFile.size);
     console.log('- type: ' + userFile.type);
-    console.log(' ====================== ');
+    console.log(' ====================== '); */
 
     if (userFile.size == 0 && userText.length == 0) {
       console.log('No input');
