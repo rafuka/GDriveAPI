@@ -60,6 +60,6 @@ app.post('/submitfile', (req, res) => {
   });
 });
 
-let port = 5050;
+let port = process.env.PORT || 5050;
 app.listen(port);
 console.log('listening at port ' + port);
