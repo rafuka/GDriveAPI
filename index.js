@@ -12,7 +12,6 @@ let dbx = new Dropbox({ accessToken: ACCESS_TOKEN, fetch: fetch });
 const app = express();
 
 app.get('/', (req, res) => {
-  //res.render('index', { submitUrl: `${req.url}/submitfile` });
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 
@@ -44,6 +43,8 @@ app.post('/submitfile', (req, res) => {
       return res.end('Please provide your resume via file or text input.');
     }
 
+    // TODO: check file size, type, etc.. before submitting
+
     let date = new Date();
 
     dbx.filesUpload({
@@ -51,7 +52,6 @@ app.post('/submitfile', (req, res) => {
       path: userFile.size > 0 ? `/${userFile.name}` : `/typed-submit-${date.getTime()}.txt`,
     }).then(data => {
       console.log('File uploaded successfully');
-      console.log(data);
       res.end('File uploaded successfully');
     }).catch(err => {
       console.error(err)
