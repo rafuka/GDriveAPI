@@ -4,6 +4,7 @@
   "description": "Google Drive Api usage example",
   "main": "index.js",
   "dependencies": {
+    "dotenv": "^7.0.0",
     "dropbox": "^4.0.16",
     "express": "^4.16.4",
     "formidable": "^1.2.1",
@@ -14,7 +15,8 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ."
+    "start-db": "node index-db",
+    "start-gd": "node index-gd"
   },
   "repository": {
     "type": "git",

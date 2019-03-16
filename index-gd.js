@@ -2,9 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const formidable = require('formidable');
-
 const readline = require('readline');
 const { google } = require('googleapis');
+const dotenv = require('dotenv').config();
+
+/*
+* CODE TAKEN FROM GOOGLE =================
+*/
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
@@ -14,9 +18,9 @@ const SCOPES = ['https://www.googleapis.com/auth/drive'];
 const TOKEN_PATH = 'token.json';
 
 // Load client secrets from a local file.
-//let credentials = JSON.parse(fs.readFileSync('credentials.json'));
+let credentials = JSON.parse(fs.readFileSync('credentials.json'));
 
-//authorize(credentials, getUser);
+authorize(credentials, getUser);
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -72,33 +76,20 @@ function getAccessToken(oAuth2Client, callback) {
  * Prints authorized user's info on the console
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-/*function getUser(auth) {
+function getUser(auth) {
   const drive = google.drive({ version: 'v3', auth });
 
   drive.about.get({ fields: 'user' }, (err, res) => {
     console.log(res.data);
     console.log('===============')
   });
-}*/
-
-
-const app = express();
-console.log('FROM HERE')
-const drive = google.drive({
-  version: 'v3',
-  auth: 'AIzaSyAN5ZXsdQOwXodUWTbSV-FZ4wGGNdWMdcM'
-});
-
-async function getUser() {
-  const res = await drive.about.get({ fields: 'user' });
-  console.log('USER DATA:');
-  console.log(res.data);
-  console.log('===============')
-  return res.data
 }
 
-let user = getUser().catch(console.error);
-console.log('TO HERE')
+/*
+* END CODE TAKEN FROM GOOGLE =================
+*/ 
+
+const app = express();
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname + '/index.html'));
@@ -115,17 +106,7 @@ app.post('/submitfile', (req, res) => {
     }
 
     let userText = fields.text;
-    console.log('Textarea input text:');
-    console.log("\"" + userText + "\"");
-    console.log('Text length: ' + userText.length);
-    console.log(' ====================== ');
-
     let userFile = files.file;
-    console.log('File input:');
-    console.log('- name: ' + userFile.name);
-    console.log('- size: ' + userFile.size);
-    console.log('- type: ' + userFile.type);
-    console.log(' ====================== ');
 
     if (userFile.size == 0 && userText.length == 0) {
       console.log('No input');

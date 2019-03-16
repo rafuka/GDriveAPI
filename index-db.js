@@ -4,8 +4,9 @@ const express = require('express');
 const formidable = require('formidable');
 const Dropbox = require('dropbox').Dropbox;
 const fetch = require('isomorphic-fetch');
+const dotenv = require('dotenv').config();
 
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN || '2jO3qLvMgjMAAAAAAAAJDjG57p6stdPt6etsyS_tPZU2n67PMDnyICASvoc7OytH';
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 
 let dbx = new Dropbox({ accessToken: ACCESS_TOKEN, fetch: fetch });
 
@@ -25,18 +26,7 @@ app.post('/submitfile', (req, res) => {
     }
 
     let userText = fields.text;
-   /* console.log('Textarea input text:');
-    console.log("\"" + userText + "\"");
-    console.log('Text length: ' + userText.length);
-    console.log(' ====================== '); */
-
     let userFile = files.file;
-   /* console.log('File input:');
-    console.log(userFile);
-    console.log('- name: ' + userFile.name);
-    console.log('- size: ' + userFile.size);
-    console.log('- type: ' + userFile.type);
-    console.log(' ====================== '); */
 
     if (userFile.size == 0 && userText.length == 0) {
       console.log('No input');
