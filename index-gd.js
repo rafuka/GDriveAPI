@@ -2,9 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const formidable = require('formidable');
-
 const readline = require('readline');
 const { google } = require('googleapis');
+const dotenv = require('dotenv').config();
+
+/*
+* CODE TAKEN FROM GOOGLE =================
+*/
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
@@ -81,9 +85,11 @@ function getUser(auth) {
   });
 }
 
+/*
+* END CODE TAKEN FROM GOOGLE =================
+*/ 
 
 const app = express();
-
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname + '/index.html'));
@@ -100,17 +106,7 @@ app.post('/submitfile', (req, res) => {
     }
 
     let userText = fields.text;
-    console.log('Textarea input text:');
-    console.log("\"" + userText + "\"");
-    console.log('Text length: ' + userText.length);
-    console.log(' ====================== ');
-
     let userFile = files.file;
-    console.log('File input:');
-    console.log('- name: ' + userFile.name);
-    console.log('- size: ' + userFile.size);
-    console.log('- type: ' + userFile.type);
-    console.log(' ====================== ');
 
     if (userFile.size == 0 && userText.length == 0) {
       console.log('No input');
